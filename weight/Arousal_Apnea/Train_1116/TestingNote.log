@@ -1,0 +1,5 @@
+[2023-11-21 14:55:13,954][predict.py][line:94][INFO] Using TMU 107 Data for testing
+[2023-11-21 15:11:35,593][predict.py][line:137][INFO] Arousal Results
+[2023-11-21 15:11:35,593][predict.py][line:138][INFO] Average Arousal Precision:0.429, Average Arousal Recall:0.806, Average Arousal F1 Score:0.56
+[2023-11-21 15:11:35,593][predict.py][line:143][INFO] Apnea Results
+[2023-11-21 15:11:35,594][predict.py][line:144][INFO] Average Apnea Precision:0.405, Average Apnea Recall:0.651, Average Apnea F1 Score:0.5

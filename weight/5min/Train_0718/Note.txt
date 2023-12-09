@@ -1,0 +1,6 @@
+接續7/14沒跑完的繼續跑
+1. data: 105+107 for training , 104 for validation
+2. model: Unet + LSTM
+3. loss: crossentropy
+4. channel: EEG(c3, c4), EOG, EMG, EKG
+驗證結果: AUPRC 0.555

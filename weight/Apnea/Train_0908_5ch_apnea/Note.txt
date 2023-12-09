@@ -1,0 +1,6 @@
+1. data: 105+107 for training , 104 for validation
+2. model: Unet + (LSTM+bilstm)
+3. loss: crossentropy
+4. channel: EEG(c3, c4), EOG, EMG, EKG
+5. optimizer: RMSprop
+0.52

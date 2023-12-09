@@ -1,0 +1,7 @@
+1. data: 104+105 for training , 107 for validation
+2. model: Unet + (LSTM+bilstm)
+3. loss: crossentropy
+4. channel: SpO2, Abdomen, EMG, EKG, Nasal Pressure
+5. optimizer: RMSprop
+6. New Label Only OSA
+7. EPochs: 100, lr:0.00001, Batch_size:16

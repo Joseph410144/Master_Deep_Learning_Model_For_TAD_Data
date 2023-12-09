@@ -1,0 +1,1 @@
+Change reshape to permute

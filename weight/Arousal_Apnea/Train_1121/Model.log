@@ -1,0 +1,94 @@
+﻿==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+ArousalApneaUENNModel                    [8, 1, 30000]             --
+├─USleep_5min_Encoder: 1-1               [8, 8, 30000]             --
+│    └─Down: 2-1                         [8, 15, 15000]            --
+│    │    └─Sequential: 3-1              [8, 15, 15000]            1,815
+│    └─Down: 2-2                         [8, 18, 7500]             --
+│    │    └─Sequential: 3-2              [8, 18, 7500]             3,078
+│    └─Down: 2-3                         [8, 21, 3750]             --
+│    │    └─Sequential: 3-3              [8, 21, 3750]             4,221
+│    └─Down: 2-4                         [8, 24, 1875]             --
+│    │    └─Sequential: 3-4              [8, 24, 1875]             5,544
+│    └─Up: 2-5                           [8, 21, 3750]             --
+│    │    └─ConvTranspose1d: 3-5         [8, 21, 3750]             1,029
+│    │    └─Sequential: 3-6              [8, 21, 3750]             6,741
+│    └─Up: 2-6                           [8, 18, 7500]             --
+│    │    └─ConvTranspose1d: 3-7         [8, 18, 7500]             774
+│    │    └─Sequential: 3-8              [8, 18, 7500]             4,968
+│    └─Up: 2-7                           [8, 15, 15000]            --
+│    │    └─ConvTranspose1d: 3-9         [8, 15, 15000]            555
+│    │    └─Sequential: 3-10             [8, 15, 15000]            3,465
+│    └─OutConv: 2-8                      [8, 8, 30000]             --
+│    │    └─ConvTranspose1d: 3-11        [8, 8, 30000]             248
+│    │    └─Sequential: 3-12             [8, 8, 30000]             688
+├─DPRNN: 1-2                             [8, 1, 30000]             --
+│    └─ModuleList: 2-17                  --                        (recursive)
+│    │    └─RNNLayer: 3-13               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-14              [8, 8, 30000]             16
+│    └─ModuleList: 2-19                  --                        (recursive)
+│    │    └─RNNLayer: 3-15               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-16              [8, 8, 30000]             (recursive)
+│    └─ModuleList: 2-17                  --                        (recursive)
+│    │    └─RNNLayer: 3-17               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-18              [8, 8, 30000]             16
+│    └─ModuleList: 2-19                  --                        (recursive)
+│    │    └─RNNLayer: 3-19               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-20              [8, 8, 30000]             (recursive)
+│    └─ModuleList: 2-17                  --                        (recursive)
+│    │    └─RNNLayer: 3-21               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-22              [8, 8, 30000]             16
+│    └─ModuleList: 2-19                  --                        (recursive)
+│    │    └─RNNLayer: 3-23               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-20                  --                        (recursive)
+│    │    └─GroupNorm: 3-24              [8, 8, 30000]             (recursive)
+│    └─Sequential: 2-21                  [8, 1, 30000]             --
+│    │    └─PReLU: 3-25                  [8, 8, 30000]             1
+│    │    └─Conv1d: 3-26                 [8, 1, 30000]             9
+│    │    └─Sigmoid: 3-27                [8, 1, 30000]             --
+├─DPRNN: 1-3                             [8, 1, 30000]             --
+│    └─ModuleList: 2-30                  --                        (recursive)
+│    │    └─RNNLayer: 3-28               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-29              [8, 8, 30000]             16
+│    └─ModuleList: 2-32                  --                        (recursive)
+│    │    └─RNNLayer: 3-30               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-31              [8, 8, 30000]             (recursive)
+│    └─ModuleList: 2-30                  --                        (recursive)
+│    │    └─RNNLayer: 3-32               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-33              [8, 8, 30000]             16
+│    └─ModuleList: 2-32                  --                        (recursive)
+│    │    └─RNNLayer: 3-34               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-35              [8, 8, 30000]             (recursive)
+│    └─ModuleList: 2-30                  --                        (recursive)
+│    │    └─RNNLayer: 3-36               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-37              [8, 8, 30000]             16
+│    └─ModuleList: 2-32                  --                        (recursive)
+│    │    └─RNNLayer: 3-38               [8, 30000, 8]             38,920
+│    └─ModuleList: 2-33                  --                        (recursive)
+│    │    └─GroupNorm: 3-39              [8, 8, 30000]             (recursive)
+│    └─Sequential: 2-34                  [8, 1, 30000]             --
+│    │    └─PReLU: 3-40                  [8, 8, 30000]             1
+│    │    └─Conv1d: 3-41                 [8, 1, 30000]             9
+│    │    └─Sigmoid: 3-42                [8, 1, 30000]             --
+==========================================================================================
+Total params: 500,282
+Trainable params: 500,282
+Non-trainable params: 0
+Total mult-adds (G): 114.55
+==========================================================================================
+Input size (MB): 7.68
+Forward/backward pass size (MB): 3817.20
+Params size (MB): 2.00
+Estimated Total Size (MB): 3826.88
+==========================================================================================
