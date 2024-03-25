@@ -1,4 +1,4 @@
-from UnetModel import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet
+from UnetModel import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet
 import torch
 from torchinfo import summary
 from DatasetUnet import UnetDataset, UnetDataset_timeEmbd
@@ -84,32 +84,52 @@ def AUPRC(test_iter, model, device):
     plt.savefig(rf"weight\Apnea\Train_0927\re_fig.jpg")
     print("AUPRC:", auc(recallAll, precisionAll))
 
+def Point2Second(predict, gt, DEVICE):
+    """
+    input: Predict data and label(by point)
+    output: Predict data(by second) and label(by second)
+    """
 
+    batch, gt_length = gt.shape
+    gt = gt.view(batch, gt_length//100, 100).contiguous().to(DEVICE)
+    gt_matrix_second = torch.ones(100, dtype=gt.dtype).view(100, 1).contiguous().to(DEVICE)
+    gt_bySecond = torch.matmul(gt, gt_matrix_second)/100
+    batch, length, _ = gt_bySecond.shape
+    gt_bySecond = gt_bySecond.view(batch, length).contiguous()
+
+    predict = predict.view(batch, gt_length//100, 100).contiguous().to(DEVICE)
+    predict_bySecond = torch.matmul(predict, gt_matrix_second)/100
+    batch, length, _ = predict_bySecond.shape
+    predict_bySecond = predict_bySecond.view(batch, length).contiguous()
+
+    return predict_bySecond, gt_bySecond
 
 def main():
     Valtrain_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Train"
     Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Label"
 
 
-    logger = get_logger(fr'weight\Arousal_Apnea\Train_0310\TestingNote.log')
+    logger = get_logger(fr'weight\Arousal_Apnea\Train_0126\TestingNote.log')
     logger.info(f"Using TMU 107 Data for testing")
     # logger.info(f"Change linear to Coonv1D 1x1 to reduct dim")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
     model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=8)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
+    # with open(fr'weight\Arousal_Apnea\Train_1108\Model.log', 'w', encoding='utf-8-sig') as f:
+    #     report = summary(model, input_size=(8, 8, 5*60*100), device=device)
+    #     f.write(str(report))
     model = model.to(device)
     if torch.cuda.device_count() > 1:
         model = DataParallel(model)
-    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0310\model42_1.061769385063915.pth'))
+    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0126\model38_1.133586593369814.pth'))
     model = model.eval()
     allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
     test_iter = DataLoader(dataset=allDataset,
-                        batch_size=4, 
+                        batch_size=8, 
                         drop_last=True,
                         shuffle=False)
 
@@ -128,13 +148,15 @@ def main():
         ApneaLabel = y[:, 1, :].contiguous()
         if CheckDataHasAnomaly(ArousalLabel):
             ArousalNums += 1
-            prec, reca = Accuracy(ArousalLabel, ArousalPred, 0.5)
+            pre_second, lab_second = Point2Second(ArousalPred, ArousalLabel, device)
+            prec, reca = Accuracy(lab_second, pre_second, 0.5)
             totalArousalPre += prec
             totalArousalRec += reca
         
         if CheckDataHasAnomaly(ApneaLabel):
             ApneaNums += 1
-            prec, reca = Accuracy(ApneaLabel, ApneaPred, 0.5)
+            pre_second, lab_second = Point2Second(ApneaPred, ApneaLabel, device)
+            prec, reca = Accuracy(lab_second, pre_second, 0.5)
             totalApneaPre += prec
             totalApneaRec += reca
 
