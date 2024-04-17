@@ -318,7 +318,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def main():
-    WeightDataPath = r"weight\Arousal_Apnea\Train_0310"
+    WeightDataPath = r"weight\Arousal_Apnea\Train_0415"
     """ Physionet2018 """
     # TrainDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Train"
     # LabelDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Label"
@@ -379,10 +379,10 @@ def main():
     # report = summary(model_mod, input_size=(8, 8, 5*60*100), device=DEVICE)
     # logger.info(str(report))
     logger.info(f"Batch size: {BATCH_SIZE}, Learning Rate: {LEARNING_RATE}, Epochs: {NUM_EPOCHS}, Loss: CrossEntropy, Optimizer: RMSProp, Device: {DEVICE}")
-    logger.info(f"Only use timesUnet to predict, which has two classifier")
+    logger.info(f"Use ConvTimeNet")
     model_mod.to(DEVICE)
-    if torch.cuda.device_count() > 1:
-        model_mod = DataParallel(model_mod)
+    # if torch.cuda.device_count() > 1:
+    #     model_mod = DataParallel(model_mod)
     train(model_mod, DEVICE, NUM_EPOCHS, LEARNING_RATE, trainloader, valloader, logger, WeightDataPath)
 
 

@@ -130,7 +130,7 @@ class TimesNet(nn.Module):
         x_Arousal = self.Arousalclassifier(x_out)
         x_Apnea = self.Apneaclassifier(x_out)
         
-        return x_Arousal, x_Apnea, x_out
+        return x_Arousal, x_Apnea#, x_out
     
 
 if __name__ == "__main__":

@@ -6,7 +6,63 @@ import numpy as np
 # from torchsummary import summary
 from torchinfo import summary
 from torch.nn.parallel import DataParallel
+from UnetModel.ConvTimeNet.ConvTimeNetBackBone import ConvTimeNet_backbone
 # from UnetModel.Detr1D import Transformer1d
+
+class Transformer1d(nn.Module):
+    """
+    
+    Input:
+        X: (n_samples, n_channel, n_length)
+        Y: (n_samples)
+        
+    Output:
+        out: (n_samples, n_classes)
+        
+    Pararmetes:
+        
+    """
+
+    def __init__(self, n_classes, n_length, d_model, nhead, dim_feedforward, dropout, activation, verbose=False):
+        super(Transformer1d, self).__init__()
+
+        self.d_model = d_model
+        self.nhead = nhead
+        self.n_length = n_length
+        self.dim_feedforward = dim_feedforward
+        self.dropout = dropout
+        self.activation = activation
+        self.n_classes = n_classes
+        self.verbose = verbose
+        
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=self.d_model, 
+            nhead=self.nhead, 
+            dim_feedforward=self.dim_feedforward, 
+            dropout=self.dropout)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.dense = nn.Linear(self.d_model, self.n_classes)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        # B, C, T
+        out = x
+        # T, B, C
+        out = out.permute(2, 0, 1)
+
+        out = self.transformer_encoder(out)
+
+        # B, T, C
+        out = out.permute(1, 0, 2)
+
+        out = self.dense(out)
+
+        # B, C, T
+        out = out.permute(0, 2, 1)
+
+        out = self.sigmoid(out)
+        
+        return out    
 
 class Inception_Block_V1(nn.Module):
     def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
@@ -219,6 +275,7 @@ class DPRNN(nn.Module):
         self.hidden_size = hidden_size
         self.emb_dimension = emb_dimension
         
+        """ 無作用，但是之前訓練模型時沒有註解掉，所以有時需要用到或是註解看之前是什麼情況 """
         self.pos_embd_layer = nn.Sequential(
             nn.ReLU(),
             nn.Linear(self.emb_dimension, self.input_size),
@@ -500,6 +557,14 @@ def FFT_for_Period_Channel(x, k=2):
     period_all = np.array(list(period_all))
     return period_all, frequency_weight
 
+def ShortTimeFFT(x):
+    B, C, T = x.shape
+    seg = T//(30*100)
+    for i in range(0, seg):
+        xf = torch.fft.rfft(x, dim=2)
+        xf = xf[:, :, 1:]
+
+
 class TimesBlock(nn.Module):
     def __init__(self, seq_len=5*60*100, pred_len=0, top_k=5, d_model=8, d_ff=32, num_kernels=3, num_class=1, n_features=8):
         super(TimesBlock, self).__init__()
@@ -550,10 +615,11 @@ class TimesBlock(nn.Module):
             res.append(out[:, :(self.seq_len + self.pred_len), :])
         res = torch.stack(res, dim=-1)
         # adaptive aggregation
-        period_weight = F.softmax(period_weight, dim=1)
-        period_weight = period_weight.unsqueeze(
-            1).unsqueeze(1).repeat(1, T, N, 1)
-        res = torch.sum(res * period_weight, -1)
+        # period_weight = F.softmax(period_weight, dim=1)
+        # period_weight = period_weight.unsqueeze(
+        #     1).unsqueeze(1).repeat(1, T, N, 1)
+        # res = torch.sum(res * period_weight, -1)
+        res = torch.sum(res * 1, -1)
         # residual connection
         res = res + x
         """ for feature extractor """
@@ -624,10 +690,14 @@ class ArousalApneaUENNModel(nn.Module):
 
         """ Encoder : TimesNet """
         # self.layer_norm = nn.LayerNorm(8)
-        # self.encoder = nn.ModuleList([TimesBlock()
+        # # self.encoder = nn.ModuleList([TimesBlock(seq_len=size, pred_len=0, top_k=5, d_model=8, d_ff=32, num_kernels=3, num_class=num_class, n_features=n_features)
+        # #                             for _ in range(2)])
+        # self.encoder = nn.ModuleList([TimesBlock_FFTMod(seq_len=size, pred_len=0, top_k=5, d_model=8, d_ff=32, num_kernels=3, num_class=num_class, n_features=n_features)
         #                             for _ in range(2)])
-        # self.encoder = nn.ModuleList([TimesBlock_FFTMod()
-        #                             for _ in range(2)])
+
+        self.encoder = ConvTimeNet_backbone(c_in=8, seq_len=int(5*60*100), context_window = int(5*60*100),
+                                target_window=5*60*100, patch_len=50, stride=160, n_layers=6, d_model=64, d_ff=256, dw_ks=[9,11,15,21,29,39], norm="batch", dropout=0.0, act="gelu", head_dropout=0.0, padding_patch = None, head_type="flatten", 
+                                revin=1, affine=0, deformable=True, subtract_last=0, enable_res_param=1, re_param=1, re_param_kernel=3)
 
 
         """Decoder : LSTM stacks"""
@@ -635,12 +705,31 @@ class ArousalApneaUENNModel(nn.Module):
         # self.decoderApnea = USleep_5min_Decoder(size, 8, num_class, False)
 
         """ Decoder : DPRNN """
-        # self.decoderArousal = DPRNN(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
-        # self.decoderApnea = DPRNN(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
+        self.decoderArousal = DPRNN(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
+        self.decoderApnea = DPRNN(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
 
         """ Decoder : DPRNN_2D """
-        self.decoderArousal = DPRNN_2D(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
-        self.decoderApnea = DPRNN_2D(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
+        # self.decoderArousal = DPRNN_2D(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
+        # self.decoderApnea = DPRNN_2D(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
+
+        """ Decoder : Transformer1d """
+        # self.decoderArousal = Transformer1d(n_classes=1, 
+        #                         n_length=3*60*100, 
+        #                         d_model=8, 
+        #                         nhead=1, 
+        #                         dim_feedforward=128, 
+        #                         dropout=0.1, 
+        #                         activation='relu',
+        #                         verbose = True)
+
+        # self.decoderApnea = Transformer1d(n_classes=1, 
+        #                         n_length=3*60*100, 
+        #                         d_model=8, 
+        #                         nhead=1, 
+        #                         dim_feedforward=128, 
+        #                         dropout=0.1, 
+        #                         activation='relu',
+        #                         verbose = True)
 
         
 
@@ -649,12 +738,11 @@ class ArousalApneaUENNModel(nn.Module):
         # for i in range(2):
         #     x_encoder = self.layer_norm(self.encoder[i](x_encoder))
         #     x_encoder = x_encoder.permute(0, 2, 1)
-
+        
         x_encoder = self.encoder(x_encoder)
-        # x_encoder = self.encoder(x)
         x_arousal = self.decoderArousal(x_encoder)
         x_apnea = self.decoderApnea(x_encoder)
-        return x_arousal, x_apnea, x_encoder
+        return x_arousal, x_apnea#, x_encoder
 
 
 if __name__ == '__main__':

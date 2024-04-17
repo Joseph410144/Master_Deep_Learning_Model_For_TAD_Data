@@ -58,53 +58,75 @@ def Accuracy(gt, predict, threshold):
 
 
 def AUPRC(test_iter, model, device):
-    precisionAll = []
-    recallAll = []
+    precisionAllArousal = []
+    recallAllArousal = []
+    precisionAllApnea = []
+    recallAllApnea = []
     for threshold in np.arange(0, 1, 0.01):
-        totalPre = 0
-        totalRec = 0
+        totalArousalPre = 0
+        totalArousalRec = 0
+        totalApneaPre = 0
+        totalApneaRec = 0
         num = 0
         for X, y in tqdm(test_iter):
             num+=1
             X, y = X.to(device=device, dtype=torch.float32), y.to(device=device, dtype=torch.float32)
             ArousalLabel = y[:, 0, :].contiguous()
             ApneaLabel = y[:, 1, :].contiguous()
-            pre = model(X)
-            prec, reca = Accuracy(y, pre, threshold)
-            totalPre += prec
-            totalRec += reca
-        precisionAll.append(totalPre/num)
-        recallAll.append(totalRec/num)
-    plt.plot(recallAll, precisionAll)
+            Arousalpred, Apneapred = model(X)
+            Arousalprec, Arousalreca = Accuracy(ArousalLabel, Arousalpred, threshold)
+            Apneaprec, Apneareca = Accuracy(ApneaLabel, Apneapred, threshold)
+
+            totalArousalPre += Arousalprec
+            totalArousalRec += Arousalreca
+
+            totalApneaPre += Apneaprec
+            totalApneaRec += Apneareca
+
+        precisionAllArousal.append(totalArousalPre/num)
+        recallAllArousal.append(totalArousalRec/num)
+        precisionAllApnea.append(totalApneaPre/num)
+        recallAllApnea.append(totalApneaRec/num)
+
+    plt.plot(recallAllArousal, precisionAllArousal)
     plt.xlabel("Recall")
     plt.ylabel("Precision")
     plt.title("P-R Curve")
     plt.xlim(0, 1)
     plt.ylim(0, 1)
-    plt.savefig(rf"weight\Apnea\Train_0927\re_fig.jpg")
-    print("AUPRC:", auc(recallAll, precisionAll))
+    plt.savefig(rf"weight\Arousal_Apnea\Train_0404\Arousalre_fig.jpg")
+    print("AUPRC:", auc(recallAllArousal, precisionAllArousal))
+
+    plt.plot(recallAllApnea, precisionAllApnea)
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title("P-R Curve")
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.savefig(rf"weight\Arousal_Apnea\Train_0404\Apneare_fig.jpg")
+    print("AUPRC:", auc(recallAllApnea, precisionAllApnea))
 
 
 
 def main():
-    Valtrain_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Train"
-    Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Label"
+    Valtrain_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalAoneaData_10min\Validation\Train"
+    Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalAoneaData_10min\Validation\Label"
 
 
-    logger = get_logger(fr'weight\Arousal_Apnea\Train_0310\TestingNote.log')
+    logger = get_logger(fr'weight\Arousal_Apnea\Train_0404\TestingNote.log')
     logger.info(f"Using TMU 107 Data for testing")
     # logger.info(f"Change linear to Coonv1D 1x1 to reduct dim")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=8)
+    model = UnetLSTMModel.ArousalApneaUENNModel(size=10*60*100, num_class=1, n_features=8)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
     model = model.to(device)
     if torch.cuda.device_count() > 1:
         model = DataParallel(model)
-    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0310\model42_1.061769385063915.pth'))
+    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0404\model49_1.0534174341489286.pth'))
     model = model.eval()
     allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
@@ -151,7 +173,7 @@ def main():
     logger.info(fr"Average Apnea Precision:{AverageApneaPre}, Average Apnea Recall:{AverageApneaRec}, Average Apnea F1 Score:{AverageApneaF1Score}")
 
 
-
+    AUPRC(test_iter, model, device)
 
 if __name__ == "__main__":
     main()
