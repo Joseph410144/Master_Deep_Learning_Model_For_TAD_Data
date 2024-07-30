@@ -121,20 +121,20 @@ def main():
     Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Label"
 
 
-    logger = get_logger(fr'weight\Arousal_Apnea\Train_0310\TestingNote.log')
+    logger = get_logger(fr'weight\Arousal_Apnea\Train_0501\TestingNote.log')
     logger.info(f"Using TMU 107 Data for calculating AUPRC")
     # logger.info(f"Change linear to Coonv1D 1x1 to reduct dim")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=8)
+    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
     model = model.to(device)
     if torch.cuda.device_count() > 1:
         model = DataParallel(model)
-    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0310\model42_1.061769385063915.pth'))
+    model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0501\model48_1.788333569254194.pth'))
     model = model.eval()
     allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
@@ -159,6 +159,7 @@ def main():
         X, y = X.to(device=device, dtype=torch.float32), y.to(device=device, dtype=torch.float32)
         ArousalLabel = y[:, 0, :].contiguous()
         ApneaLabel = y[:, 1, :].contiguous()
+        X = X[:, 3:, :].contiguous()
         Arousalpred, Apneapred = model(X)
         if CheckDataHasAnomaly(ArousalLabel):
             ArousalNums += 1

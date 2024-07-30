@@ -72,18 +72,15 @@ def DrawPicture(DictVar, WeightDataPath, traget):
 
 def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightDataPath):
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
-    criterion = Loss_Function.CrossEntropy_Cut()
+    criterion = Loss_Function.CrossEntropy_Cut_Physionet()
     best_loss = float('inf')
     bestTestLoss = float('inf')
     bestArousalF1 = 0
-    bestApneaF1 = 0
 
     """ record Training information """
     ArousalEpochRecord = {"loss_fig":[], "loss_test_fig":[], "f1_fig":[], "re_fig":[], "pre_fig":[], "f1_test_fig":[], 
                    "re_test_fig":[], "pre_test_fig":[]}
 
-    ApneaEpochRecord = {"loss_fig":[], "loss_test_fig":[], "f1_fig":[], "re_fig":[], "pre_fig":[], "f1_test_fig":[], 
-                   "re_test_fig":[], "pre_test_fig":[]}
     
     Total_Loss = []
     Val_Loss = []
@@ -96,40 +93,30 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
         best_loss = checkpoint['bestTrainLoss']
         bestTestLoss = checkpoint["bestTestLoss"]
         bestArousalF1 = checkpoint["bestArousalf1"]
-        bestApneaF1 = checkpoint["bestApneaf1"]
         Total_Loss = checkpoint["Total_Loss"]
         Val_Loss = checkpoint["Val_Loss"]
         ArousalEpochRecord = checkpoint["ArousalEpochRecord"]
-        ApneaEpochRecord = checkpoint["ApneaEpochRecord"]
         epochs_list = epochs_list[epoch_:]
 
     """ Start Training """
     for epoch in epochs_list:
         ArousalStepRecord = {"f1ScoreAverage":0, "recallAverage":0, "precisionAverage":0, "lossAverage":0}
-        ApneaStepRecord = {"f1ScoreAverage":0, "recallAverage":0, "precisionAverage":0, "lossAverage":0}
         Total_loss_Train = 0
 
         nums = 0
         ArousalNums = 0
-        ApneaNums = 0
         """ set Model into training mode """
         net.train()
         logger.info(f"********* Train Epoch:{epoch} ********")
         for image, label in tqdm(train_loader):
             optimizer.zero_grad()
             image = image.to(device=device, dtype=torch.float32)
-            label = label.to(device=device, dtype=torch.float32)
-            # time = time.to(device=device, dtype=torch.float32)
-            # 只用5 channel 訓練
-            image = image[:, 3:, :].contiguous()
-            ArousalLabel = label[:, 0, :].contiguous()
-            ApneaLabel = label[:, 1, :].contiguous()
-            ArousalPred, ApneaPred = net(image)
+            ArousalLabel = label.to(device=device, dtype=torch.float32)
+            ArousalPred = net(image)
             """ Calculate Loss """
             lossArousal, judgeArousal = criterion(ArousalPred, ArousalLabel)
-            lossApnea, judgeApnea = criterion(ApneaPred, ApneaLabel)
             # 讓其中一個module不要倒傳遞達成只訓練一個module
-            loss = lossApnea#lossArousal
+            loss = lossArousal
             if math.isnan(loss):
                 torch.save(net.state_dict(), rf'{WeightDataPath}\Loss_Nan_Train_model.pth')
 
@@ -140,13 +127,6 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
                 ArousalStepRecord["recallAverage"] += Arousalrecall
                 ArousalStepRecord["precisionAverage"] += Arousalprecision
                 ArousalNums += 1
-
-            Apneaf1Score, Apnearecall, Apneaprecision = Accuracy(ApneaLabel, ApneaPred, "train")
-            if Apnearecall != -1:
-                ApneaStepRecord["f1ScoreAverage"] += Apneaf1Score
-                ApneaStepRecord["recallAverage"] += Apnearecall
-                ApneaStepRecord["precisionAverage"] += Apneaprecision
-                ApneaNums += 1
             
             """ Save model which has minimum loss"""
             if loss < best_loss:
@@ -165,7 +145,6 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
             """ record loss """
             Total_loss_Train+=loss.item()
             ArousalStepRecord["lossAverage"] += lossArousal.item()
-            ApneaStepRecord["lossAverage"] += lossApnea.item()
             nums += 1
             optimizer.step()
         
@@ -174,47 +153,29 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
         ArousalStepRecord["precisionAverage"] /= ArousalNums
         ArousalStepRecord["lossAverage"] /= nums
 
-        ApneaStepRecord["f1ScoreAverage"] /= ApneaNums
-        ApneaStepRecord["recallAverage"] /= ApneaNums
-        ApneaStepRecord["precisionAverage"] /= ApneaNums
-        ApneaStepRecord["lossAverage"] /= nums
-
         Total_loss_Train /= nums
 
-        logger.info("\nTrain mode Epoch {}: Total loss:{} \nArousal >> F1_score:{}, recall:{}, precision{}, loss:{} \nApnea >> F1_score:{}, recall:{}, precision{}, loss:{}".format(epoch, 
+        logger.info("\nTrain mode Epoch {}: Total loss:{} \nArousal >> F1_score:{}, recall:{}, precision{}, loss:{}".format(epoch, 
                     round(Total_loss_Train, 4),
-                    round(ArousalStepRecord["f1ScoreAverage"], 4), round(ArousalStepRecord["recallAverage"], 4), round(ArousalStepRecord["precisionAverage"], 4), round(ArousalStepRecord["lossAverage"], 4),
-                    round(ApneaStepRecord["f1ScoreAverage"], 4), round(ApneaStepRecord["recallAverage"], 4), round(ApneaStepRecord["precisionAverage"], 4), round(ApneaStepRecord["lossAverage"], 4)))
+                    round(ArousalStepRecord["f1ScoreAverage"], 4), round(ArousalStepRecord["recallAverage"], 4), round(ArousalStepRecord["precisionAverage"], 4), round(ArousalStepRecord["lossAverage"], 4)))
         
         ArousalEpochRecord["f1_fig"].append(ArousalStepRecord["f1ScoreAverage"])
         ArousalEpochRecord["re_fig"].append(ArousalStepRecord["recallAverage"])
         ArousalEpochRecord["pre_fig"].append(ArousalStepRecord["precisionAverage"])
         ArousalEpochRecord["loss_fig"].append(ArousalStepRecord["lossAverage"])
-
-        ApneaEpochRecord["f1_fig"].append(ApneaStepRecord["f1ScoreAverage"])
-        ApneaEpochRecord["re_fig"].append(ApneaStepRecord["recallAverage"])
-        ApneaEpochRecord["pre_fig"].append(ApneaStepRecord["precisionAverage"])
-        ApneaEpochRecord["loss_fig"].append(ApneaStepRecord["lossAverage"])
         
         Total_Loss.append(Total_loss_Train)
         logger.info("************************************\n")
         """ Validation Data """
         net.eval()
-        ValArousal, ValApnea, ValLoss_, ArousalTestF1, ApneaTestF1 = test(net, test_loader, criterion, device, logger)
+        ValArousal, ValLoss_, ArousalTestF1 = test(net, test_loader, criterion, device, logger)
         if ArousalTestF1 > bestArousalF1:
             bestArousalF1 = ArousalTestF1
-        if ApneaTestF1 > bestApneaF1:
-            bestApneaF1 = ApneaTestF1
 
         ArousalEpochRecord["f1_test_fig"].append(ValArousal["f1_score"])
         ArousalEpochRecord["re_test_fig"].append(ValArousal["recall"])
         ArousalEpochRecord["pre_test_fig"].append(ValArousal["precision"])
         ArousalEpochRecord["loss_test_fig"].append(ValArousal["loss"])
-
-        ApneaEpochRecord["f1_test_fig"].append(ValApnea["f1_score"])
-        ApneaEpochRecord["re_test_fig"].append(ValApnea["recall"])
-        ApneaEpochRecord["pre_test_fig"].append(ValApnea["precision"])
-        ApneaEpochRecord["loss_test_fig"].append(ValApnea["loss"])
 
         Val_Loss.append(ValLoss_)
 
@@ -229,15 +190,12 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
             "bestTrainLoss": best_loss,
             "bestTestLoss": bestTestLoss,
             "bestArousalf1": bestArousalF1,
-            "bestApneaf1": bestApneaF1,
             "Total_Loss": Total_Loss,
             "Val_Loss": Val_Loss,
             "ArousalEpochRecord": ArousalEpochRecord,
-            "ApneaEpochRecord": ApneaEpochRecord
         }, rf"{WeightDataPath}\CheckPoint.pt")
 
     DrawPicture(ArousalEpochRecord, WeightDataPath, "Arousal")
-    DrawPicture(ApneaEpochRecord, WeightDataPath, "Apnea")
 
     plt.figure()
     plt.title(f"Total Loss Fig")
@@ -248,15 +206,13 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
     plt.legend()
     plt.savefig(rf"{WeightDataPath}\Figure\Total_loss.jpg")
     plt.close()
-    logger.info(f"Best Test Loss: {round(bestTestLoss, 4)}, Best Arousal F1 Score: {bestArousalF1}, Best Apnea F1 Score: {bestApneaF1}")
+    logger.info(f"Best Test Loss: {round(bestTestLoss, 4)}, Best Arousal F1 Score: {bestArousalF1}")
 
 def test(net, test_iter, criterion, device, logger):
     TestArousalRecord = {"f1_score":0, "recall":0, "precision":0, "loss":0}
-    TestApneaRecord = {"f1_score":0, "recall":0, "precision":0, "loss":0}
     total_loss_test = 0
     nums_ = 0
     ArousalNums_ = 0
-    ApneaNums_ = 0
 
     with torch.no_grad():
         logger.info("*************** test ***************")
@@ -264,13 +220,11 @@ def test(net, test_iter, criterion, device, logger):
             X, y = X.to(device=device, dtype=torch.float32), y.to(device=device, dtype=torch.float32)
             # t = t.to(device=device, dtype=torch.float32)
             # 只用5 channel 訓練
-            X = X[:, 3:, :].contiguous()
-            ArousalPred, ApneaPred = net(X)
-            ArousalLabel = y[:, 0, :].contiguous()
-            ApneaLabel = y[:, 1, :].contiguous()
+            X = X.contiguous()
+            ArousalPred = net(X)
+            ArousalLabel = y.contiguous()
             ArousalLoss, _ = criterion(ArousalPred, ArousalLabel)
-            ApneaLoss, _ = criterion(ApneaPred, ApneaLabel)
-            loss = ApneaLoss#ArousalLoss
+            loss = ArousalLoss
             total_loss_test += loss.item()
 
             f1sc, RecallTest, PrecisionTest= Accuracy(ArousalLabel, ArousalPred, "test")
@@ -280,35 +234,20 @@ def test(net, test_iter, criterion, device, logger):
                 TestArousalRecord["precision"] += PrecisionTest
                 ArousalNums_ += 1
             TestArousalRecord["loss"] += ArousalLoss.item()
-
-            f1sc, RecallTest, PrecisionTest= Accuracy(ApneaLabel, ApneaPred, "test")
-            if RecallTest != -1:
-                TestApneaRecord["f1_score"] += f1sc
-                TestApneaRecord["recall"] += RecallTest
-                TestApneaRecord["precision"] += PrecisionTest
-                ApneaNums_ += 1
-            TestApneaRecord["loss"] += ApneaLoss.item()
             nums_ += 1
     
     TestArousalRecord["f1_score"] /= ArousalNums_
     TestArousalRecord["recall"] /= ArousalNums_
     TestArousalRecord["precision"] /= ArousalNums_
     TestArousalRecord["loss"] /= nums_
-
-    TestApneaRecord["f1_score"] /= ApneaNums_
-    TestApneaRecord["recall"] /= ApneaNums_
-    TestApneaRecord["precision"] /= ApneaNums_
-    TestApneaRecord["loss"] /= nums_
-
     total_loss_test /= nums_
 
 
-    logger.info("\nTest mode: Total loss:{} \nArousal >> F1_score:{}, recall:{}, precision{}, loss:{} \nApnea >> F1_score:{}, recall:{}, precision{}, loss:{}".format(round(total_loss_test, 4),
-                    round(TestArousalRecord["f1_score"], 4), round(TestArousalRecord["recall"], 4), round(TestArousalRecord["precision"], 4), round(TestArousalRecord["loss"], 4),
-                    round(TestApneaRecord["f1_score"], 4), round(TestApneaRecord["recall"],4), round(TestApneaRecord["precision"], 4), round(TestApneaRecord["loss"], 4)))
+    logger.info("\nTest mode: Total loss:{} \nArousal >> F1_score:{}, recall:{}, precision{}, loss:{}".format(round(total_loss_test, 4),
+                    round(TestArousalRecord["f1_score"], 4), round(TestArousalRecord["recall"], 4), round(TestArousalRecord["precision"], 4), round(TestArousalRecord["loss"], 4)))
     logger.info("************************************\n")
 
-    return TestArousalRecord, TestApneaRecord, total_loss_test, round(TestArousalRecord["f1_score"], 4), round(TestApneaRecord["f1_score"], 4)
+    return TestArousalRecord, total_loss_test, round(TestArousalRecord["f1_score"], 4)
 
 
 
@@ -323,44 +262,16 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def main():
-    WeightDataPath = r"weight\Arousal_Apnea\Train_0507"
+    WeightDataPath = r"weight\Physionet2018\Train_0711"
     """ Physionet2018 """
-    # TrainDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Train"
-    # LabelDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Label"
-    # allDataset = UnetDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
-    #                   transform=None)
-    # train_size = int(len(allDataset)*0.8)
-    # test_size = len(allDataset)-train_size
-    # trainset, valset = torch.utils.data.random_split(allDataset, [train_size, test_size])
+    TrainDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Train"
+    LabelDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Label"
+    allDataset = UnetDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
+                      transform=None)
+    train_size = int(len(allDataset)*0.8)
+    test_size = len(allDataset)-train_size
+    trainset, valset = torch.utils.data.random_split(allDataset, [train_size, test_size])
     
-    """ Normal, Mild, Moderate, Severe(104, 105) """
-    Normal_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Normal"
-    Mild_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Mild"
-    Moderate_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Moderate"
-    Severe_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Severe"
-
-    Normal_dataset = UnetDataset(rootX = os.path.join(Normal_datapath, "Train"), rooty = os.path.join(Normal_datapath, "Label"), transform=None)
-    train_size = int(len(Normal_dataset)*0.8)
-    test_size = len(Normal_dataset)-train_size
-    Normal_trainset, Normal_valset = torch.utils.data.random_split(Normal_dataset, [train_size, test_size])
-
-    Mild_dataset = UnetDataset(rootX = os.path.join(Mild_datapath, "Train"), rooty = os.path.join(Mild_datapath, "Label"), transform=None)
-    train_size = int(len(Mild_dataset)*0.8)
-    test_size = len(Mild_dataset)-train_size
-    Mild_trainset, Mild_valset = torch.utils.data.random_split(Mild_dataset, [train_size, test_size])
-
-    Moderate_dataset = UnetDataset(rootX = os.path.join(Moderate_datapath, "Train"), rooty = os.path.join(Moderate_datapath, "Label"), transform=None)
-    train_size = int(len(Moderate_dataset)*0.8)
-    test_size = len(Moderate_dataset)-train_size
-    Moderate_trainset, Moderate_valset = torch.utils.data.random_split(Moderate_dataset, [train_size, test_size])
-
-    Severe_dataset = UnetDataset(rootX = os.path.join(Severe_datapath, "Train"), rooty = os.path.join(Severe_datapath, "Label"), transform=None)
-    train_size = int(len(Severe_dataset)*0.8)
-    test_size = len(Severe_dataset)-train_size
-    Severe_trainset, Severe_valset = torch.utils.data.random_split(Severe_dataset, [train_size, test_size])
-
-    trainset = ConcatDataset([Normal_trainset, Mild_trainset, Moderate_trainset, Severe_trainset])
-    valset = ConcatDataset([Normal_valset, Mild_valset, Moderate_valset, Severe_valset])
     trainloader = DataLoader(dataset=trainset,
                         batch_size=BATCH_SIZE, 
                         shuffle=False,
@@ -373,18 +284,13 @@ def main():
 
 
     logger = get_logger(f'{WeightDataPath}\TrainingNote.log')
-    # model_mod = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model_mod = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
-    # model_mod = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
-    # model_mod = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
-    # model_mod = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
+    model_mod = TIEN_RisdualLSTM.ArousalApneaUENNModel(size=5*60*200, num_class=1, n_features=8)
     with open(f'{WeightDataPath}\Model.log', 'w', encoding='utf-8-sig') as f:
-        report = summary(model_mod, input_size=(8, 5, 5*60*100), device=DEVICE)
+        report = summary(model_mod, input_size=(8, 8, 5*60*200), device=DEVICE)
         f.write(str(report))
-    # report = summary(model_mod, input_size=(8, 8, 5*60*100), device=DEVICE)
-    # logger.info(str(report))
+
     logger.info(f"Batch size: {BATCH_SIZE}, Learning Rate: {LEARNING_RATE}, Epochs: {NUM_EPOCHS}, Loss: CrossEntropy, Optimizer: RMSProp, Device: {DEVICE}")
-    logger.info(f"only train apnea module")
+    logger.info(f"Phtsionet 2018 Arousal Test")
     model_mod.to(DEVICE)
     if torch.cuda.device_count() > 1:
         model_mod = DataParallel(model_mod)

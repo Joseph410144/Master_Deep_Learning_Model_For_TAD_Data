@@ -661,7 +661,6 @@ class TimesBlock_FFTMod(nn.Module):
                 length = (self.seq_len + self.pred_len)
                 out = x
             # reshape
-            # print(length, period, length // period)
             out = out.reshape(B, length // period, period,
                               N).permute(0, 3, 1, 2).contiguous()
             # 2D conv: from 1d Variation to 2d Variation
@@ -707,7 +706,7 @@ class ArousalApneaUENNModel(nn.Module):
         # hidden unit: 32, 64, 128
         hidden_unit = 64
         self.decoderArousal = DPRNN(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
-        self.decoderApnea = DPRNN(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
+        #self.decoderApnea = DPRNN(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3, emb_dimension=128)
 
         """ Decoder : DPRNN_2D """
         # self.decoderArousal = DPRNN_2D(size, n_features, 64, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
@@ -742,14 +741,14 @@ class ArousalApneaUENNModel(nn.Module):
         
         # x_encoder = self.encoder(x_encoder)
         x_arousal = self.decoderArousal(x_encoder)
-        x_apnea = self.decoderApnea(x_encoder)
-        return x_arousal, x_apnea#, x_encoder
+        #x_apnea = self.decoderApnea(x_encoder)
+        return x_arousal#, x_apnea#, x_encoder
 
 
 if __name__ == '__main__':
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     # net = TimesBlock()
-    net = ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=13)
+    net = ArousalApneaUENNModel(size=5*60*200, num_class=1, n_features=13)
     # net = DPRNN_2D(seq_len=5*60*100, input_size=8, hidden_size=64, output_size=1, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
     net.to(DEVICE)
-    report = summary(net, input_size=(8, 13, 5*60*100), device=DEVICE)
+    report = summary(net, input_size=(8, 13, 5*60*200), device=DEVICE)

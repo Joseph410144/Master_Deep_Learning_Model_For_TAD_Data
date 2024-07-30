@@ -45,6 +45,31 @@ class CrossEntropy_Cut(nn.Module):
 			judge = True
 		return loss, judge
 	
+class CrossEntropy_Cut_Physionet(nn.Module):
+	def __init__(self):
+		super(CrossEntropy_Cut_Physionet, self).__init__()
+
+	def forward(self, y_pred, y_true):
+		y_true_f = y_true.view(-1)
+		y_pred_f = y_pred.view(-1)
+		y_pred_f = torch.clamp(y_pred_f, 1e-7, 1.0 - 1e-7)
+		mask = y_true_f == 1
+		mask_ne = y_true_f == 0
+		losses = -(y_true_f * torch.log(y_pred_f) + (1.0 - y_true_f) * torch.log(1.0 - y_pred_f))
+		masked_loss = losses[mask]
+		mask_neLoss = losses[mask_ne]
+		"""
+		tensor.any() >> if has 1 true: True, otherwise: False. 
+		tensor.all() >> All true: True, otherwise: False. 
+		"""
+		if not mask.any():
+			loss = torch.mean(mask_neLoss)
+			judge = False
+		else:
+			loss = torch.mean(masked_loss)+torch.mean(mask_neLoss)
+			judge = True
+		return loss, judge
+	
 if __name__ == "__main__":
 	cri = CrossEntropy_Cut()
 	input = torch.randn(3,3)
