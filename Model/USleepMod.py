@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import torchvision.models
 from torchsummary import summary
 
-
 class SelfAtten(nn.Module):
     def __init__(self, dim, keyChannel):
         super(SelfAtten, self).__init__()
@@ -78,7 +77,6 @@ class FC_Layer(nn.Module):
         x = self.conv(x)
         return self.fc_layer(x)
 
-
 class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(OutConv, self).__init__()
@@ -91,7 +89,6 @@ class OutConv(nn.Module):
     def forward(self, x):
         return self.conv(x)
     
-
 class USleep_1min(nn.Module):
     """
     Channel = 6
@@ -120,8 +117,6 @@ class USleep_1min(nn.Module):
         x = self.up7(x, x1)
         output = self.last(x)
         return output
-    
-
 
 class USleep_1minFCLayer(nn.Module):
     """
@@ -153,7 +148,6 @@ class USleep_1minFCLayer(nn.Module):
         x = self.up7(x, x1)
         output = self.last(x)
         return output
-
 
 class USleepAtten_1min(nn.Module):
     """
@@ -197,7 +191,6 @@ class USleepAtten_1min(nn.Module):
         x = self.atten5(x)
         output = self.last(x)
         return output
-
 
 class USleep_5min(nn.Module):
     """

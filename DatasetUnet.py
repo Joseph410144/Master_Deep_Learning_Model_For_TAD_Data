@@ -1,6 +1,7 @@
-from torch.utils.data import Dataset, DataLoader
 import os
 import numpy as np
+
+from torch.utils.data import Dataset, DataLoader
 
 class UnetDataset(Dataset):
     def __init__(self, rootX, rooty, transform):

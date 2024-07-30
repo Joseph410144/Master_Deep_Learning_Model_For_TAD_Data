@@ -1,14 +1,14 @@
-from UnetModel import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet
 import torch
-from torchinfo import summary
-from DatasetUnet import UnetDataset, UnetDataset_timeEmbd
-from torch.utils.data import DataLoader
-import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-from torch.nn.parallel import DataParallel
 import os
 import logging
+import matplotlib.pyplot as plt
+import numpy as np
+
+from DatasetUnet import UnetDataset
+from torch.utils.data import DataLoader
+from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet
+from tqdm import tqdm
+from torch.nn.parallel import DataParallel
 from sklearn.metrics import auc
 
 def get_logger(filename, verbosity=1, name=None):

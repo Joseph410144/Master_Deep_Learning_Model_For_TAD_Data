@@ -748,8 +748,6 @@ class ArousalApneaUENNModel(nn.Module):
 
 if __name__ == '__main__':
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    # net = TimesBlock()
     net = ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=13)
-    # net = DPRNN_2D(seq_len=5*60*100, input_size=8, hidden_size=64, output_size=1, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
     net.to(DEVICE)
     report = summary(net, input_size=(8, 13, 5*60*100), device=DEVICE)

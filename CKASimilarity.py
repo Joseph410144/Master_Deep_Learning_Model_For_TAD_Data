@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 import logging
-from UnetModel import UnetLSTMModel, TimesNet
+
+from Model import UnetLSTMModel, TimesNet
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DataParallel
@@ -18,7 +19,6 @@ def gram_linear(x):
         A num_examples x num_examples Gram matrix of examples.
     """
     return np.matmul(x, x.T)
-
 
 def gram_rbf(x, threshold=1.0):
     """Compute Gram (kernel) matrix for an RBF kernel.
@@ -37,7 +37,6 @@ def gram_rbf(x, threshold=1.0):
     sq_distances = -2 * dot_products + sq_norms[:, None] + sq_norms[None, :]
     sq_median_distance = np.median(sq_distances)
     return np.exp(-sq_distances / (2 * threshold ** 2 * sq_median_distance))
-
 
 def center_gram(gram, unbiased=False):
     """Center a symmetric Gram matrix.
@@ -77,7 +76,6 @@ def center_gram(gram, unbiased=False):
 
     return gram
 
-
 def cka(gram_x, gram_y, debiased=False):
     """Compute CKA.
 
@@ -106,7 +104,6 @@ def cka(gram_x, gram_y, debiased=False):
     normalization_y = np.linalg.norm(gram_y)
     return scaled_hsic / (normalization_x * normalization_y)
 
-
 def _debiased_dot_product_similarity_helper(xty, sum_squared_rows_x, sum_squared_rows_y, squared_norm_x, squared_norm_y, n):
     """Helper for computing debiased dot product similarity (i.e. linear HSIC)."""
     # This formula can be derived by manipulating the unbiased estimator from
@@ -114,7 +111,6 @@ def _debiased_dot_product_similarity_helper(xty, sum_squared_rows_x, sum_squared
     return (
         xty - n / (n - 2.) * sum_squared_rows_x.dot(sum_squared_rows_y)
         + squared_norm_x * squared_norm_y / ((n - 1) * (n - 2)))
-
 
 def feature_space_linear_cka(features_x, features_y, debiased=False):
     """Compute CKA with a linear kernel, in feature space.
@@ -175,7 +171,6 @@ def get_logger(filename, verbosity=1, name=None):
     logger.addHandler(sh)
 
     return logger
-
 
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"

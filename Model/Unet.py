@@ -5,8 +5,6 @@ import torchvision.models
 # from torchsummary import summary
 from torchinfo import summary
 
-
-
 class Down(nn.Module):
     """Downscaling with maxpool then double conv"""
     def __init__(self, in_channels, out_channels, pool_size):
@@ -73,7 +71,6 @@ class OutConvStage(nn.Module):
 
     def forward(self, x):
         return self.conv(x)
-
 
 class USleepStage(nn.Module):
     """
