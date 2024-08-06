@@ -256,7 +256,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def main():
-    WeightDataPath = r"weight\Physionet2018\Train_0711"
+    WeightDataPath = r"weight\Physionet2018\Train_0806"
     """ Physionet2018 """
     TrainDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Train"
     LabelDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Label"
