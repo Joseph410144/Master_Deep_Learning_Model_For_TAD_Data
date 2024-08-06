@@ -1,7 +1,0 @@
-1. data: Physionet2018(Had -1 label)
-2. model: Unet + (LSTM+bilstm)
-3. loss: crossentropy
-4. channel: C3, C4, EMG, EKG, EOG
-5. optimizer: RMSprop
-6. EPochs: 80, lr:0.00001, Batch_size:16
-7. train:val = 8:2

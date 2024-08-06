@@ -1,8 +1,0 @@
-1. data: 104, 105 Average All Class
-2. model: Unet + DPRNN(repeat*5)
-3. loss: crossentropy >> positive mean + negative mean
-4. channel: C3, C4, EOG, EKG, EMG, Nasal Pressure, Abdomen, SpO2
-5. optimizer: RMSprop
-6. EPochs: 50, lr:0.00001, Batch_size:8
-7. train:val = 8:2
-8. Unet >> 8*30000 >> DPRNN(repeat*5)
