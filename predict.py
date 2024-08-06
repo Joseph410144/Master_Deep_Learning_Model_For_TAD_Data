@@ -6,7 +6,7 @@ import numpy as np
 
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
-from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet
+from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet, TIEN_RisdualLSTM
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
 from sklearn.metrics import auc
@@ -111,18 +111,11 @@ def AUPRC(test_iter, model, device):
 def main():
     Valtrain_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Train"
     Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Label"
-
-
     logger = get_logger(fr'weight\Arousal_Apnea\Train_0501\TestingNote.log')
     logger.info(f"Using TMU 107 Data for testing")
-    # logger.info(f"Change linear to Coonv1D 1x1 to reduct dim")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
-    # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
-    # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
-    # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
+    model = TIEN_RisdualLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
     model = model.to(device)
     if torch.cuda.device_count() > 1:
         model = DataParallel(model)
@@ -144,8 +137,6 @@ def main():
     ApneaNums = 0
     for X, y in tqdm(test_iter):
         X, y = X.to(device=device, dtype=torch.float32), y.to(device=device, dtype=torch.float32)
-        # t = t.to(device=device, dtype=torch.float32)
-        X = X[:, :5, :].contiguous()
         ArousalPred, ApneaPred = model(X)
         ArousalLabel = y[:, 0, :].contiguous()
         ApneaLabel = y[:, 1, :].contiguous()

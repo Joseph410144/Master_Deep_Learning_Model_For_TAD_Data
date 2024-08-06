@@ -685,7 +685,7 @@ class ArousalApneaUENNModel(nn.Module):
     def __init__(self, size, num_class, n_features):
         super(ArousalApneaUENNModel, self).__init__()
         """ Encoder : Unet """
-        self.encoder = USleep_5min_Encoder(size, n_features, num_class)
+        # self.encoder = USleep_5min_Encoder(size, n_features, num_class)
 
         """ Encoder : TimesNet """
         self.layer_norm = nn.LayerNorm(n_features)

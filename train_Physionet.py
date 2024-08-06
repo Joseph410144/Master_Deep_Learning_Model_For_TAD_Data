@@ -12,8 +12,6 @@ from tqdm import tqdm
 from torch.nn.parallel import DataParallel
 from torchinfo import summary
 
-
-
 def get_logger(filename, verbosity=1, name=None):
     level_dict = {0: logging.DEBUG, 1: logging.INFO, 2: logging.WARNING}
     formatter = logging.Formatter(
@@ -66,8 +64,6 @@ def DrawPicture(DictVar, WeightDataPath, traget):
         plt.legend()
         plt.savefig(rf"{WeightDataPath}\Figure\{traget}_{train}.jpg")
         plt.close()
-
-
 
 def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightDataPath):
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
@@ -249,7 +245,6 @@ def test(net, test_iter, criterion, device, logger):
     return TestArousalRecord, total_loss_test, round(TestArousalRecord["f1_score"], 4)
 
 
-
 BATCH_SIZE = 4
 NUM_EPOCHS = 50
 NUM_CLASSES = 1
@@ -283,7 +278,7 @@ def main():
 
 
     logger = get_logger(f'{WeightDataPath}\TrainingNote.log')
-    model_mod = TIEN_RisdualLSTM.ArousalApneaUENNModel(size=5*60*200, num_class=1, n_features=8)
+    model_mod = TIEN_RisdualLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
     with open(f'{WeightDataPath}\Model.log', 'w', encoding='utf-8-sig') as f:
         report = summary(model_mod, input_size=(8, 8, 5*60*200), device=DEVICE)
         f.write(str(report))

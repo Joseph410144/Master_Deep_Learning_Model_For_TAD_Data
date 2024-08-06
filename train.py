@@ -4,7 +4,7 @@ import os
 import math
 import logging
 
-from Model import Loss_Function, TIEN_RisdualLSTM, UnetLSTMModel
+from Model import Loss_Function, TIEN_RisdualLSTM
 from torch import optim
 from DatasetUnet import UnetDataset, UnetDataset_timeEmbd
 from torch.utils.data import DataLoader
@@ -108,7 +108,6 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
         ArousalStepRecord = {"f1ScoreAverage":0, "recallAverage":0, "precisionAverage":0, "lossAverage":0}
         ApneaStepRecord = {"f1ScoreAverage":0, "recallAverage":0, "precisionAverage":0, "lossAverage":0}
         Total_loss_Train = 0
-
         nums = 0
         ArousalNums = 0
         ApneaNums = 0
@@ -119,21 +118,17 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
             optimizer.zero_grad()
             image = image.to(device=device, dtype=torch.float32)
             label = label.to(device=device, dtype=torch.float32)
-            # time = time.to(device=device, dtype=torch.float32)
-            # 只用5 channel 訓練
-            image = image[:, 3:, :].contiguous()
+
             ArousalLabel = label[:, 0, :].contiguous()
             ApneaLabel = label[:, 1, :].contiguous()
             ArousalPred, ApneaPred = net(image)
             """ Calculate Loss """
-            lossArousal, judgeArousal = criterion(ArousalPred, ArousalLabel)
-            lossApnea, judgeApnea = criterion(ApneaPred, ApneaLabel)
-            # 讓其中一個module不要倒傳遞達成只訓練一個module
-            loss = lossApnea#lossArousal
+            lossArousal = criterion(ArousalPred, ArousalLabel)
+            lossApnea = criterion(ApneaPred, ApneaLabel)
+            loss = lossApnea+lossArousal
             if math.isnan(loss):
                 torch.save(net.state_dict(), rf'{WeightDataPath}\Loss_Nan_Train_model.pth')
-
-            # judge, f1Score, recall, precision = Accuracy_Physionet(label, pred, "train")
+                
             Arousalf1Score, Arousalrecall, Arousalprecision = Accuracy(ArousalLabel, ArousalPred, "train")
             if Arousalrecall != -1:
                 ArousalStepRecord["f1ScoreAverage"] += Arousalf1Score
@@ -262,15 +257,12 @@ def test(net, test_iter, criterion, device, logger):
         logger.info("*************** test ***************")
         for X, y in tqdm(test_iter):
             X, y = X.to(device=device, dtype=torch.float32), y.to(device=device, dtype=torch.float32)
-            # t = t.to(device=device, dtype=torch.float32)
-            # 只用5 channel 訓練
-            X = X[:, 3:, :].contiguous()
             ArousalPred, ApneaPred = net(X)
             ArousalLabel = y[:, 0, :].contiguous()
             ApneaLabel = y[:, 1, :].contiguous()
             ArousalLoss, _ = criterion(ArousalPred, ArousalLabel)
             ApneaLoss, _ = criterion(ApneaPred, ApneaLabel)
-            loss = ApneaLoss#ArousalLoss
+            loss = ApneaLoss+ArousalLoss
             total_loss_test += loss.item()
 
             f1sc, RecallTest, PrecisionTest= Accuracy(ArousalLabel, ArousalPred, "test")
@@ -373,16 +365,11 @@ def main():
 
 
     logger = get_logger(f'{WeightDataPath}\TrainingNote.log')
-    # model_mod = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model_mod = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
-    # model_mod = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
-    # model_mod = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
-    # model_mod = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
+    model_mod = TIEN_RisdualLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
     with open(f'{WeightDataPath}\Model.log', 'w', encoding='utf-8-sig') as f:
         report = summary(model_mod, input_size=(8, 5, 5*60*100), device=DEVICE)
         f.write(str(report))
-    # report = summary(model_mod, input_size=(8, 8, 5*60*100), device=DEVICE)
-    # logger.info(str(report))
+
     logger.info(f"Batch size: {BATCH_SIZE}, Learning Rate: {LEARNING_RATE}, Epochs: {NUM_EPOCHS}, Loss: CrossEntropy, Optimizer: RMSProp, Device: {DEVICE}")
     logger.info(f"only train apnea module")
     model_mod.to(DEVICE)

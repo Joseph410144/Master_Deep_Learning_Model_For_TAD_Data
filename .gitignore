@@ -1,5 +1,8 @@
-weight
-ReadMe
+weight/5min/*
+weight/Apnea/*
+weight/Arousal/*
+weight/Arousal_Apnea/*
+weight/Physionet2018/*
 .venv
 .vscode
 __pycache__

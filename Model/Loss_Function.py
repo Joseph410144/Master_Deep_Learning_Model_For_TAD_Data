@@ -39,11 +39,10 @@ class CrossEntropy_Cut(nn.Module):
 		"""
 		if not mask.any():
 			loss = torch.mean(mask_neLoss)
-			judge = False
 		else:
 			loss = torch.mean(masked_loss)+torch.mean(mask_neLoss)
-			judge = True
-		return loss, judge
+			
+		return loss
 	
 class CrossEntropy_Cut_Physionet(nn.Module):
 	def __init__(self):

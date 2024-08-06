@@ -101,7 +101,7 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = TIEN_RisdualLSTM.ArousalApneaUENNModel(size=5*60*200, num_class=1, n_features=8)
+    model = TIEN_RisdualLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
