@@ -7,7 +7,7 @@ from DatasetUnet import UnetDataset
 from torcheval.metrics.functional import binary_auprc, binary_auroc
 from torchmetrics.classification import BinaryPrecisionRecallCurve
 from torch.utils.data import DataLoader
-from Model import TIEN_RisdualLSTM
+from Model import TIEN_RisdualBiLSTM
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
 from sklearn.metrics import auc
@@ -101,7 +101,7 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = TIEN_RisdualLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
+    model = TIEN_RisdualBiLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)

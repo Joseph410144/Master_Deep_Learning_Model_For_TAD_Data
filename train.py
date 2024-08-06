@@ -4,9 +4,9 @@ import os
 import math
 import logging
 
-from Model import Loss_Function, TIEN_RisdualLSTM
+from Model import Loss_Function, TIEN_RisdualBiLSTM
 from torch import optim
-from DatasetUnet import UnetDataset, UnetDataset_timeEmbd
+from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
@@ -128,7 +128,7 @@ def train(net, device, epochs, lr, train_loader, test_loader, logger, WeightData
             loss = lossApnea+lossArousal
             if math.isnan(loss):
                 torch.save(net.state_dict(), rf'{WeightDataPath}\Loss_Nan_Train_model.pth')
-                
+
             Arousalf1Score, Arousalrecall, Arousalprecision = Accuracy(ArousalLabel, ArousalPred, "train")
             if Arousalrecall != -1:
                 ArousalStepRecord["f1ScoreAverage"] += Arousalf1Score
@@ -365,7 +365,7 @@ def main():
 
 
     logger = get_logger(f'{WeightDataPath}\TrainingNote.log')
-    model_mod = TIEN_RisdualLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
+    model_mod = TIEN_RisdualBiLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
     with open(f'{WeightDataPath}\Model.log', 'w', encoding='utf-8-sig') as f:
         report = summary(model_mod, input_size=(8, 5, 5*60*100), device=DEVICE)
         f.write(str(report))

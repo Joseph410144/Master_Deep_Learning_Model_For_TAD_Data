@@ -6,7 +6,7 @@ import numpy as np
 
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
-from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet, TIEN_RisdualLSTM
+from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet, TIEN_RisdualBiLSTM
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
 from sklearn.metrics import auc
@@ -115,7 +115,7 @@ def main():
     logger.info(f"Using TMU 107 Data for testing")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = TIEN_RisdualLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
+    model = TIEN_RisdualBiLSTM.ArousalApneaModel(size=5*60*100, num_class=1, n_features=8)
     model = model.to(device)
     if torch.cuda.device_count() > 1:
         model = DataParallel(model)

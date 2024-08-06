@@ -4,7 +4,7 @@ import math
 import logging
 import matplotlib.pyplot as plt
 
-from Model import Loss_Function, TIEN_RisdualLSTM
+from Model import Loss_Function, TIEN_RisdualBiLSTM
 from torch import optim
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
@@ -278,7 +278,7 @@ def main():
 
 
     logger = get_logger(f'{WeightDataPath}\TrainingNote.log')
-    model_mod = TIEN_RisdualLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
+    model_mod = TIEN_RisdualBiLSTM.ArousalApneaModel_Physionet(size=5*60*200, num_class=1, n_features=8)
     with open(f'{WeightDataPath}\Model.log', 'w', encoding='utf-8-sig') as f:
         report = summary(model_mod, input_size=(8, 8, 5*60*200), device=DEVICE)
         f.write(str(report))
