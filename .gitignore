@@ -1,9 +1,9 @@
-weight/5min/*
-weight/Apnea/*
-weight/Arousal/*
-weight/Arousal_Apnea/*
-weight/Physionet2018/*
+weight/5min
+weight/Apnea
+weight/Arousal
+weight/Arousal_Apnea
+weight/Physionet2018
 .venv
 .vscode
 __pycache__
-UnetModel/__pycache__
+Model/__pycache__
