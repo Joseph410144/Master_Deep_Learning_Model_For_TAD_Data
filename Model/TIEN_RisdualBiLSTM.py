@@ -17,11 +17,11 @@ class ArousalApneaModel(nn.Module):
         self.encoder = nn.ModuleList([TimesBlock_FFTMod(seq_len=size, pred_len=0, top_k=2, d_model=n_features, d_ff=32, num_kernels=3, num_class=num_class, n_features=n_features)
                                     for _ in range(2)])
 
-        """ Decoder : DPRNN """
+        """ Decoder : Residual Stacked Bi-LSTM """
         # hidden unit: 32, 64, 128
         hidden_unit = 64
-        self.decoderArousal = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
-        self.decoderApnea = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
+        self.decoderArousal = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 6)
+        self.decoderApnea = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 6)
 
     def forward(self, x):
         x_encoder = x
@@ -42,10 +42,10 @@ class ArousalApneaModel_Physionet(nn.Module):
         self.encoder = nn.ModuleList([TimesBlock_FFTMod(seq_len=size, pred_len=0, top_k=2, d_model=n_features, d_ff=32, num_kernels=3, num_class=num_class, n_features=n_features)
                                     for _ in range(2)])
 
-        """ Decoder : DPRNN """
+        """ Decoder : Residual Stacked Bi-LSTM """
         # hidden unit: 32, 64, 128
         hidden_unit = 64
-        self.decoderArousal = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 3)
+        self.decoderArousal = ResidualStackBiLSTM(size, n_features, hidden_unit, num_class, dropout=0, num_layers=1, bidirectional=True, repeat_times = 6)
 
     def forward(self, x):
         x_encoder = x
@@ -57,7 +57,7 @@ class ArousalApneaModel_Physionet(nn.Module):
         return x_arousal
 
 if __name__ == '__main__':
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    DEVICE = "cpu"
     net = ArousalApneaModel(size=5*60*200, num_class=1, n_features=8)
     net.to(DEVICE)
     report = summary(net, input_size=(8, 8, 5*60*200), device=DEVICE)

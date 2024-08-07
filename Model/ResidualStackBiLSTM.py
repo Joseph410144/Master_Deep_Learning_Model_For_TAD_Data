@@ -55,11 +55,9 @@ class ResidualStackBiLSTM(nn.Module):
         self.hidden_size = hidden_size
 
         self.rnn1 = nn.ModuleList([])
-        self.rnn2 = nn.ModuleList([])
         self.rnn_norm = nn.ModuleList([])
         for i in range(repeat_times):
             self.rnn1.append(RNNLayer(seq_len, input_size, hidden_size, dropout=dropout, num_layers=num_layers, bidirectional=bidirectional))
-            self.rnn2.append(RNNLayer(seq_len, input_size, hidden_size, dropout=dropout, num_layers=num_layers, bidirectional=bidirectional))
             self.rnn_norm.append(nn.GroupNorm(1, input_size, eps=1e-8))
 
         self.output = nn.Sequential(nn.PReLU(),
@@ -75,13 +73,7 @@ class ResidualStackBiLSTM(nn.Module):
             output_rnn1 = output_rnn1.permute(0, 2, 1)
             output_rnn1 = self.rnn_norm[i](output_rnn1)
             output_rnn1 = output_rnn1.permute(0, 2, 1)
-            output_rnn1 = output_rnn1 + input_rnn1 
-
-            output_rnn2 = self.rnn2[i](output_rnn1)
-            output_rnn2 = output_rnn2.permute(0, 2, 1)
-            output_rnn2 = self.rnn_norm[i](output_rnn2)
-            output_rnn2 = output_rnn2.permute(0, 2, 1)
-            output = output_rnn2 + output_rnn1
+            output = output_rnn1 + input_rnn1 
 
         output = output.permute(0, 2, 1)
         output = self.output(output)

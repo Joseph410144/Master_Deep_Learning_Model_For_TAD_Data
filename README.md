@@ -1,43 +1,30 @@
 # Master_Deep_Learning_Model_For_TAD_Data
+This repository contains deep learning models developed during my master's research, primarily utilizing physiological signals to detect sleep-related events.
+It currently provides all deep learning models that have been tested, developed, or researched, and will continue to be updated.
 
 Master Thesis: An automatic system for detecting arousals and sleep apnea events that integrates a time-frequency information encoding network and residual stacked bidirectional long short-term memory network
 
-Model: TIEN_ResidualBiLSTM.py
+## Models
+* Our model:
+  * TIEN_RisdualBiLSTM - Master Thesis
+* Compared models
+  * Unet
+  * TimesNet - TimesNet: Temporal 2D-Variation Modeling for General Time Series Analysis
+  * LSTM
 
-## code
 
-### Metric
+## Code using
 
-CalAUPRC.py
-predict.py
-predictBySecond.py
-predict_Physionet.py : Physionet 2018 Data
+* Training
+  * train.py
+  * train_Physionet.py
 
-### Training
+* predict
+  * predict.py
+  * predict_Physionet.py
 
-train.py
-train_Physionet.py : Physionet 2018 Data
+## Contact
+Please feel free to contact if you have any question or suggestion
+* Joseph Wang (joseph410144@gmail.com)
 
-### CKA Simarility
-
-CKASimarility.py
-
-### Dataset & Data loader
-
-DatasetUnet.py
-
-## Folder
-
-### Model
-
-<Deep Learning model>
-1. Unet
-2. TimesNet
-3. Residual Stack Bi-LSTM
-4. TIEN
-
-### weight
-
-TrainingNote.log : Training epoch information
-TestingNote.log : Metric information
-Model.log : Model information
+You can also describe it in issues.
