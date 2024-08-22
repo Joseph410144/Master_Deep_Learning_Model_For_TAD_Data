@@ -6,7 +6,7 @@ import numpy as np
 
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
-from Model import USleepMod, UsleepModLstm, UnetLSTMModel, Unet, DPRNNBlock, TimesNet, TimesUnet, TIEN_RisdualBiLSTM
+from Model import TIEN_RisdualBiLSTM
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
 from sklearn.metrics import auc

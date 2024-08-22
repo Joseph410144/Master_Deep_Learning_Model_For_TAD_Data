@@ -46,7 +46,7 @@ class RNNLayer(nn.Module):
 
 class ResidualStackBiLSTM(nn.Module):
     def __init__(self, seq_len, input_size, hidden_size, output_size,
-                 dropout=0, num_layers=1, bidirectional=True, repeat_times = 3):
+                 dropout=0, num_layers=1, bidirectional=True, repeat_times = 6):
         super(ResidualStackBiLSTM, self).__init__()
 
         self.seq_len = seq_len
@@ -68,17 +68,47 @@ class ResidualStackBiLSTM(nn.Module):
     def forward(self, x):
         output = x.permute(0, 2, 1)
         for i in range(len(self.rnn1)):
-            input_rnn1 = output 
-            output_rnn1 = self.rnn1[i](input_rnn1)
-            output_rnn1 = output_rnn1.permute(0, 2, 1)
-            output_rnn1 = self.rnn_norm[i](output_rnn1)
-            output_rnn1 = output_rnn1.permute(0, 2, 1)
-            output = output_rnn1 + input_rnn1 
+            input = output 
+            output = self.rnn1[i](input)
+            output = output.permute(0, 2, 1)
+            output = self.rnn_norm[i](output)
+            output = output.permute(0, 2, 1)
+            output = output + input 
 
         output = output.permute(0, 2, 1)
         output = self.output(output)
 
         return output
+    
+class ArousalModel_Physionet(nn.Module):
+    def __init__(self, seq_len=5*60*200, input_size=8, hidden_size=64, output_size=1,
+                 dropout=0, num_layers=1, bidirectional=True, repeat_times = 6):
+        super(ArousalModel_Physionet, self).__init__()
+
+        self.arousal = ResidualStackBiLSTM(seq_len, input_size, hidden_size, output_size,
+                 dropout, num_layers, bidirectional, repeat_times)
+
+    def forward(self, x):
+        output = self.arousal(x)
+
+        return output
+
+class ArousalApneaModel(nn.Module):
+    def __init__(self, seq_len=5*60*200, input_size=8, hidden_size=64, output_size=1,
+                 dropout=0, num_layers=1, bidirectional=True, repeat_times = 6):
+        super(ArousalApneaModel, self).__init__()
+
+        self.arousal = ResidualStackBiLSTM(seq_len, input_size, hidden_size, output_size,
+                 dropout, num_layers, bidirectional, repeat_times)
+        
+        self.apnea = ResidualStackBiLSTM(seq_len, input_size, hidden_size, output_size,
+                 dropout, num_layers, bidirectional, repeat_times)
+
+    def forward(self, x):
+        outputArousal = self.arousal(x)
+        outputApnea = self.apnea(x)
+
+        return outputArousal, outputApnea
 
 if __name__ == "__main__":
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

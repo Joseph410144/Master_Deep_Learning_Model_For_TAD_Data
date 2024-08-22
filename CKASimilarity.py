@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import logging
 
-from Model import UnetLSTMModel, TimesNet
+from Model import TimesNet, UnetResidualBiLSTM
 from DatasetUnet import UnetDataset
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DataParallel
@@ -174,7 +174,7 @@ def get_logger(filename, verbosity=1, name=None):
 
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=8)
+    model = UnetResidualBiLSTM.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=8)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
 
     logger = get_logger(fr'weight\Arousal_Apnea\Train_1219\CKASimilarity.log')

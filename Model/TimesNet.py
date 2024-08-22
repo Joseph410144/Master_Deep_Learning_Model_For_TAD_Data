@@ -97,9 +97,9 @@ class TimesBlock(nn.Module):
 
         return res
     
-class TimesNet(nn.Module):
+class TimesNet_MultiTask(nn.Module):
     def __init__(self, seq_length, num_class, n_features, layer):
-        super(TimesNet, self).__init__()
+        super(TimesNet_MultiTask, self).__init__()
         self.seq_length = seq_length
         self.num_class = num_class
         self.n_features = n_features
@@ -132,9 +132,36 @@ class TimesNet(nn.Module):
         
         return x_Arousal, x_Apnea#, x_out
     
+class TimesNet_Physionet(nn.Module):
+    def __init__(self, seq_length, num_class, n_features, layer):
+        super(TimesNet_Physionet, self).__init__()
+        self.seq_length = seq_length
+        self.num_class = num_class
+        self.n_features = n_features
+        self.layer = layer
+
+        self.layer_norm = nn.LayerNorm(8)
+        self.Timesblock = nn.ModuleList([TimesBlock(seq_len=self.seq_length, pred_len=0, top_k=5, d_model=8, d_ff=32, 
+                                                    num_kernels=3, num_class=self.num_class, n_features=self.n_features)
+                                    for _ in range(self.layer)])
+        self.Arousalclassifier = nn.Sequential(
+            nn.PReLU(),
+            nn.Conv1d(self.n_features, self.num_class, kernel_size=1),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        x_out = x
+        for i in range(self.layer):
+            x_out = self.layer_norm(self.Timesblock[i](x_out))
+            x_out = x_out.permute(0, 2, 1)
+
+        x_Arousal = self.Arousalclassifier(x_out)
+        
+        return x_Arousal
 
 if __name__ == "__main__":
-    net = TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
+    net = TimesNet_MultiTask(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     net.to(DEVICE)
     report = summary(net, input_size=(8, 8, 5*60*100), device=DEVICE)

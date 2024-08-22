@@ -23,8 +23,11 @@ Master Thesis: An automatic system for detecting arousals and sleep apnea events
   * predict.py
   * predict_Physionet.py
 
+## Get Started
+
 ## Contact
 Please feel free to contact if you have any question or suggestion
 * Joseph Wang (joseph410144@gmail.com)
 
 You can also describe it in issues.
+

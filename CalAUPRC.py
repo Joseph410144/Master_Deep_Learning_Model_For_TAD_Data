@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Model import UnetLSTMModel
+from Model import UnetResidualBiLSTM
 from torchinfo import summary
 from torcheval.metrics.functional import binary_auprc, binary_auroc
 from torchmetrics.classification import BinaryPrecisionRecallCurve
@@ -127,7 +127,7 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # model = TimesUnet.TimesUnet(size=60*5*100, channels=8, num_class=1)
-    model = UnetLSTMModel.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
+    model = UnetResidualBiLSTM.ArousalApneaUENNModel(size=5*60*100, num_class=1, n_features=5)
     # model = TimesNet.TimesNet(seq_length=5*60*100, num_class=1, n_features=8, layer=3)
     # model = Unet.Unet_test_sleep_data(size=60*5*100, channels=8, num_class=1)
     # model = DPRNNBlock.DPRNNClassifier(size=5*60*100, num_class=1, n_features=8)
