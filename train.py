@@ -6,7 +6,7 @@ import logging
 
 from Model import Loss_Function, TIEN_RisdualBiLSTM
 from torch import optim
-from DatasetUnet import UnetDataset
+from SleepDataset import SleepDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
@@ -319,7 +319,7 @@ def main():
     """ Physionet2018 """
     # TrainDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Train"
     # LabelDatasetPath = r"D:\Joseph_NCHU\Lab\data\Physionet\Arousal\Data1029\Label"
-    # allDataset = UnetDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
+    # allDataset = SleepDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
     #                   transform=None)
     # train_size = int(len(allDataset)*0.8)
     # test_size = len(allDataset)-train_size
@@ -331,22 +331,22 @@ def main():
     Moderate_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Moderate"
     Severe_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaDataNew\Severe"
 
-    Normal_dataset = UnetDataset(rootX = os.path.join(Normal_datapath, "Train"), rooty = os.path.join(Normal_datapath, "Label"), transform=None)
+    Normal_dataset = SleepDataset(rootX = os.path.join(Normal_datapath, "Train"), rooty = os.path.join(Normal_datapath, "Label"), transform=None)
     train_size = int(len(Normal_dataset)*0.8)
     test_size = len(Normal_dataset)-train_size
     Normal_trainset, Normal_valset = torch.utils.data.random_split(Normal_dataset, [train_size, test_size])
 
-    Mild_dataset = UnetDataset(rootX = os.path.join(Mild_datapath, "Train"), rooty = os.path.join(Mild_datapath, "Label"), transform=None)
+    Mild_dataset = SleepDataset(rootX = os.path.join(Mild_datapath, "Train"), rooty = os.path.join(Mild_datapath, "Label"), transform=None)
     train_size = int(len(Mild_dataset)*0.8)
     test_size = len(Mild_dataset)-train_size
     Mild_trainset, Mild_valset = torch.utils.data.random_split(Mild_dataset, [train_size, test_size])
 
-    Moderate_dataset = UnetDataset(rootX = os.path.join(Moderate_datapath, "Train"), rooty = os.path.join(Moderate_datapath, "Label"), transform=None)
+    Moderate_dataset = SleepDataset(rootX = os.path.join(Moderate_datapath, "Train"), rooty = os.path.join(Moderate_datapath, "Label"), transform=None)
     train_size = int(len(Moderate_dataset)*0.8)
     test_size = len(Moderate_dataset)-train_size
     Moderate_trainset, Moderate_valset = torch.utils.data.random_split(Moderate_dataset, [train_size, test_size])
 
-    Severe_dataset = UnetDataset(rootX = os.path.join(Severe_datapath, "Train"), rooty = os.path.join(Severe_datapath, "Label"), transform=None)
+    Severe_dataset = SleepDataset(rootX = os.path.join(Severe_datapath, "Train"), rooty = os.path.join(Severe_datapath, "Label"), transform=None)
     train_size = int(len(Severe_dataset)*0.8)
     test_size = len(Severe_dataset)-train_size
     Severe_trainset, Severe_valset = torch.utils.data.random_split(Severe_dataset, [train_size, test_size])

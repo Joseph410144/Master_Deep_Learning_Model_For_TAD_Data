@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from Model import Loss_Function, TIEN_RisdualBiLSTM
 from torch import optim
-from DatasetUnet import UnetDataset
+from SleepDataset import SleepDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
@@ -260,7 +260,7 @@ def main():
     """ Physionet2018 """
     TrainDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Train"
     LabelDatasetPath = r"E:\JosephHsiang\Physionet2018TrainData\Label"
-    allDataset = UnetDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
+    allDataset = SleepDataset(rootX = TrainDatasetPath, rooty = LabelDatasetPath,
                       transform=None)
     train_size = int(len(allDataset)*0.8)
     test_size = len(allDataset)-train_size

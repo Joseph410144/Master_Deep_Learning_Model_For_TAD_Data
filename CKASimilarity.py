@@ -3,7 +3,7 @@ import torch
 import logging
 
 from Model import TimesNet, UnetResidualBiLSTM
-from DatasetUnet import UnetDataset
+from SleepDataset import SleepDataset
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DataParallel
 from tqdm import tqdm
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     Valtrain_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Train"
     Vallabel_datapath = r"D:\Joseph_NCHU\Lab\data\北醫UsleepData\ArousalApneaData\Validation\Label"
-    allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
+    allDataset = SleepDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
     test_iter = DataLoader(dataset=allDataset,
                         batch_size=8, 

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 
-from DatasetUnet import UnetDataset
+from SleepDataset import SleepDataset
 from torcheval.metrics.functional import binary_auprc, binary_auroc
 from torchmetrics.classification import BinaryPrecisionRecallCurve
 from torch.utils.data import DataLoader
@@ -110,7 +110,7 @@ def main():
         model = DataParallel(model)
     model.load_state_dict(torch.load(rf'weight\Physionet2018\Train_0711\model44_1.048349263717991.pth'))
     model = model.eval()
-    allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
+    allDataset = SleepDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
     test_iter = DataLoader(dataset=allDataset,
                         batch_size=1, 

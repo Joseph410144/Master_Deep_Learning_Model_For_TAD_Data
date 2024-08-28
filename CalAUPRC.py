@@ -7,7 +7,7 @@ from Model import UnetResidualBiLSTM
 from torchinfo import summary
 from torcheval.metrics.functional import binary_auprc, binary_auroc
 from torchmetrics.classification import BinaryPrecisionRecallCurve
-from DatasetUnet import UnetDataset, UnetDataset_timeEmbd
+from SleepDataset import SleepDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch.nn.parallel import DataParallel
@@ -136,7 +136,7 @@ def main():
         model = DataParallel(model)
     model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0501\model48_1.788333569254194.pth'))
     model = model.eval()
-    allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
+    allDataset = SleepDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
     test_iter = DataLoader(dataset=allDataset,
                         batch_size=1, 

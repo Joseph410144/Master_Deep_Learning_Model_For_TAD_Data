@@ -4,7 +4,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-from DatasetUnet import UnetDataset
+from SleepDataset import SleepDataset
 from torch.utils.data import DataLoader
 from Model import TIEN_RisdualBiLSTM
 from tqdm import tqdm
@@ -121,7 +121,7 @@ def main():
         model = DataParallel(model)
     model.load_state_dict(torch.load(rf'weight\Arousal_Apnea\Train_0501\model48_1.788333569254194.pth'))
     model = model.eval()
-    allDataset = UnetDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
+    allDataset = SleepDataset(rootX = Valtrain_datapath, rooty = Vallabel_datapath,
                       transform=None)
     test_iter = DataLoader(dataset=allDataset,
                         batch_size=4, 
